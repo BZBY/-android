@@ -83,7 +83,79 @@
             android:background="@android:color/transparent"
             android:src="@drawable/ic_subtitles" />
 
+        <ImageButton
+            android:id="@+id/speedButton"
+            android:layout_width="60dp"
+            android:layout_height="80dp"
 
+            android:layout_below="@id/idIBBack"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_speed"
+             />
+
+
+
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:gravity="center"
+        android:padding="60dp">
+
+
+
+
+        <ImageButton
+            android:id="@+id/speedButton075x"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:paddingLeft="20dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_075"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            />
+
+        <ImageButton
+            android:id="@+id/speedButton1x"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:paddingLeft="20dp"
+            android:layout_toEndOf="@id/speedButton075x"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_100"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            />
+
+        <ImageButton
+            android:id="@+id/speedButton125x"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_toEndOf="@id/speedButton1x"
+            android:paddingLeft="20dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_125"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            />
+
+        <ImageButton
+            android:id="@+id/speedButton15x"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:paddingLeft="20dp"
+
+            android:layout_toEndOf="@id/speedButton125x"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_150"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            />
 
 
     </RelativeLayout>
@@ -102,7 +174,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:thumb="@drawable/seekbar_thumb" />
+
+            android:progressDrawable="@android:color/transparent"
+            android:thumb="@android:color/transparent" />
 
         <LinearLayout
 
@@ -132,7 +206,12 @@
 
 
 
+
+
         </LinearLayout>
 
     </LinearLayout>
+
+
+
 </RelativeLayout>

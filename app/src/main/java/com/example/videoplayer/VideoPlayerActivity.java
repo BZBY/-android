@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -24,23 +25,35 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ui.PlayerView;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 public class VideoPlayerActivity extends AppCompatActivity {
 
     private TextView videoNameTV, videoTimeTV, subtitleTV;
-    private ImageButton backIB, forwardIB, playPauseIB, volumeDownIB, volumeUpIB, selectSubtitleBtn;
+    private ImageButton backIB, forwardIB, playPauseIB, volumeDownIB, volumeUpIB, selectSubtitleBtn,speedButton;
     private SeekBar videoSeekBar;
-    private VideoView videoView;
+    private PlayerView playerView;
     private RelativeLayout controlsRL, videoRL;
     private boolean isOpen = true;
     private String videoName, videoPath, subtitlePath;
-    private float currentPlaybackSpeed = 1.0f; // 默认为1倍速
-
+    private SimpleExoPlayer player;
+    private PlaybackParameters playbackParameters;
     private static final int REQUEST_CODE_SELECT_SUBTITLE = 1;
+    private float currentPlaybackSpeed = 1.0f;
+    private List<MediaStore.Video> videoList;
+    private int currentVideoIndex;
+
+    private ImageButton speedButton075x, speedButton1x, speedButton125x, speedButton15x;
+    private boolean isSpeedButtonsVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,14 +62,23 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         videoName = getIntent().getStringExtra("videoName");
         videoPath = getIntent().getStringExtra("videoPath");
+// 其他初始化和视图引用的初始化
+
+        speedButton075x = findViewById(R.id.speedButton075x);
+        speedButton1x = findViewById(R.id.speedButton1x);
+        speedButton125x = findViewById(R.id.speedButton125x);
+        speedButton15x = findViewById(R.id.speedButton15x);
+
+
 
         videoNameTV = findViewById(R.id.idTVVideoTitle);
         videoTimeTV = findViewById(R.id.idTVTime);
         backIB = findViewById(R.id.idIBBack);
+        speedButton = findViewById(R.id.speedButton);
         playPauseIB = findViewById(R.id.idIBPlay);
         forwardIB = findViewById(R.id.idIBForward);
         videoSeekBar = findViewById(R.id.idSeekBarProgress);
-        videoView = findViewById(R.id.idVideoView);
+        playerView = findViewById(R.id.playerView);
         controlsRL = findViewById(R.id.idRLControls);
         videoRL = findViewById(R.id.idRLVideo);
         volumeDownIB = findViewById(R.id.idIBVolumeDown);
@@ -64,43 +86,74 @@ public class VideoPlayerActivity extends AppCompatActivity {
         selectSubtitleBtn = findViewById(R.id.idBtnSelectSubtitle);
         subtitleTV = findViewById(R.id.idTVSubtitle);
 
-        videoView.setVideoURI(Uri.parse(videoPath));
-        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                videoSeekBar.setMax(videoView.getDuration());
-                videoView.start();
-            }
-        });
+        initializePlayer();
 
         videoNameTV.setText(videoName);
 
         backIB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                videoView.seekTo(videoView.getCurrentPosition() - 10000);
+                player.seekTo(player.getCurrentPosition() - 10000);
             }
         });
+        // 点击 speedButton 显示/隐藏倍速按钮
+        speedButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleSpeedButtons();
+            }
+        });
+
+        // 设置倍速按钮的点击事件
+        speedButton075x.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPlaybackSpeed(0.75f);
+            }
+        });
+
+        speedButton1x.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPlaybackSpeed(1.0f);
+            }
+        });
+
+        speedButton125x.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPlaybackSpeed(1.25f);
+            }
+        });
+
+        speedButton15x.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPlaybackSpeed(1.5f);
+            }
+        });
+
 
         forwardIB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                videoView.seekTo(videoView.getCurrentPosition() + 10000);
+                player.seekTo(player.getCurrentPosition() + 10000);
             }
         });
 
         playPauseIB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (videoView.isPlaying()) {
-                    videoView.pause();
+                if (player.getPlayWhenReady()) {
+                    player.setPlayWhenReady(false);
                     playPauseIB.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
                 } else {
-                    videoView.start();
+                    player.setPlayWhenReady(true);
                     playPauseIB.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
                 }
             }
         });
+
 
         volumeDownIB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,7 +171,21 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         });
 
-        videoRL.setOnClickListener(new View.OnClickListener() {
+        controlsRL.setOnClickListener(new View.OnClickListener() {
+            boolean isControlsVisible = true;
+
+            @Override
+            public void onClick(View v) {
+                if (isControlsVisible) {
+                    hideControls();
+                } else {
+                    showControls();
+                }
+                isControlsVisible = !isControlsVisible;
+            }
+        });
+
+        playerView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (isOpen) {
@@ -140,6 +207,59 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         setHandler();
         initializeSeekBar();
+
+
+    }
+
+    private void setPlaybackSpeed(float speed) {
+        if (player != null) {
+            currentPlaybackSpeed = speed;
+            PlaybackParameters parameters = new PlaybackParameters(speed);
+            player.setPlaybackParameters(parameters);
+            Toast.makeText(this, "Playback speed changed: " + speed + "x", Toast.LENGTH_SHORT).show();
+
+            // 隐藏倍速按钮
+            toggleSpeedButtons();
+        }
+    }
+    private void toggleSpeedButtons() {
+        if (isSpeedButtonsVisible) {
+            // 隐藏倍速按钮
+            speedButton075x.setVisibility(View.GONE);
+            speedButton1x.setVisibility(View.GONE);
+            speedButton125x.setVisibility(View.GONE);
+            speedButton15x.setVisibility(View.GONE);
+        } else {
+            // 显示倍速按钮
+            speedButton075x.setVisibility(View.VISIBLE);
+            speedButton1x.setVisibility(View.VISIBLE);
+            speedButton125x.setVisibility(View.VISIBLE);
+            speedButton15x.setVisibility(View.VISIBLE);
+        }
+
+        isSpeedButtonsVisible = !isSpeedButtonsVisible;
+    }
+    private void togglePlaybackSpeed() {
+        if (player != null) {
+            if (currentPlaybackSpeed == 1.0f) {
+                currentPlaybackSpeed = 2.0f;
+            } else {
+                currentPlaybackSpeed = 1.0f;
+            }
+            PlaybackParameters parameters = new PlaybackParameters(currentPlaybackSpeed);
+            player.setPlaybackParameters(parameters);
+            Toast.makeText(this, "Playback speed changed: " + currentPlaybackSpeed + "x", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void initializePlayer() {
+
+        player = new SimpleExoPlayer.Builder(this).build();
+        playerView.setPlayer(player);
+        MediaItem mediaItem = MediaItem.fromUri(Uri.parse(videoPath));
+        player.setMediaItem(mediaItem);
+        player.prepare();
+        player.play();
     }
 
     private void setHandler() {
@@ -147,10 +267,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                if (videoView.getDuration() > 0) {
-                    int curPos = videoView.getCurrentPosition();
+                if (player.getDuration() > 0) {
+                    int curPos = (int) player.getCurrentPosition();
                     videoSeekBar.setProgress(curPos);
-                    videoTimeTV.setText("" + convertTime(videoView.getDuration() - curPos));
+                    videoTimeTV.setText("" + convertTime((int) (player.getDuration() - curPos)));
                     displaySubtitle(curPos);
                 }
                 handler.postDelayed(this, 500);
@@ -182,10 +302,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (videoSeekBar.getId() == R.id.idSeekBarProgress) {
                     if (fromUser) {
-                        videoView.seekTo(progress);
-                        videoView.start();
-                        int curPos = videoView.getCurrentPosition();
-                        videoTimeTV.setText("" + convertTime(videoView.getDuration() - curPos));
+                        player.seekTo(progress);
+                        player.play();
+                        int curPos = (int) player.getCurrentPosition();
+                        videoTimeTV.setText("" + convertTime((int) (player.getDuration() - curPos)));
                         displaySubtitle(curPos);
                     }
                 }
@@ -202,7 +322,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         });
     }
-
     private void showControls() {
         TextView idTVSubtitle = findViewById(R.id.idTVSubtitle);
         idTVSubtitle.setVisibility(View.VISIBLE);
@@ -351,4 +470,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
     }
+
+
 }

@@ -1,5 +1,20 @@
 <vector android:height="32dp" android:tint="?attr/colorControlNormal"
     android:viewportHeight="24" android:viewportWidth="24"
     android:width="32dp" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="@color/white" android:pathData="M20.38,8.57l-1.23,1.85a8,8 0,0 1,-0.22 7.58L5.07,18A8,8 0,0 1,15.58 6.85l1.85,-1.23A10,10 0,0 0,3.35 19a2,2 0,0 0,1.72 1h13.85a2,2 0,0 0,1.74 -1,10 10,0 0,0 -0.27,-10.44zM10.59,15.41a2,2 0,0 0,2.83 0l5.66,-8.49 -8.49,5.66a2,2 0,0 0,0 2.83z"/>
+    <group>
+        <path
+            android:fillColor="@color/white"
+            android:pathData="M20.38,8.57l-1.23,1.85a8,8 0,0 1,-0.22 7.58L5.07,18A8,8 0,0 1,15.58 6.85l1.85,-1.23A10,10 0,0 0,3.35 19a2,2 0,0 0,1.72 1h13.85a2,2 0,0 0,1.74 -1,10 10,0 0,0 -0.27,-10.44zM10.59,15.41a2,2 0,0 0,2.83 0l5.66,-8.49 -8.49,5.66a2,2 0,0 0,0 2.83z" />
+
+        <text
+            android:text="1.25X"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="2dp" />
+    </group>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" height="1024" width="1024" viewBox="0 0 1024 1024"><path d="M512 32C246.9 32 32 246.9 32 512s214.9 480 480 480 480-214.9 480-480S777.1 32 512 32z m0 940C257.9 972 52 766.1 52 512S257.9 52 512 52s460 205.9 460 460-205.9 460-460 460z" fill="#666666"></path><path d="M" fill="#666666"></path></svg>
 </vector>

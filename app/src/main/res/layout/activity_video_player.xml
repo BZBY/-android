@@ -6,8 +6,8 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     android:background="@color/black"
+    android:id="@+id/rootLayout"
     tools:context=".VideoPlayerActivity">
-
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -15,20 +15,16 @@
         android:id="@+id/idRLVideo"
         android:gravity="center">
 
-        <VideoView
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/playerView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:keepScreenOn="true"
-            android:id="@+id/idVideoView"/>
-
-
-
+            android:layout_height="match_parent"
+            app:show_buffering="always"
+            app:resize_mode="fill"/>
 
 
     </RelativeLayout>
 
-
-
-    <include layout="@layout/custom_controls"/>
+    <include layout="@layout/custom_controls" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
